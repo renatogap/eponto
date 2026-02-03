@@ -69,7 +69,7 @@ async function startCamera() {
 }
 
 async function carregarModelos() {
-  const MODEL_URL = '/models';
+  const MODEL_URL = 'https://renatogap.github.io/eponto/models';
   
   await Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),

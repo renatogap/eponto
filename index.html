@@ -137,7 +137,7 @@ const faceStatus = document.getElementById('faceStatus');
 const btnEntrada = document.getElementById('btnEntrada');
 const btnSaida = document.getElementById('btnSaida');
 const statusDia = document.getElementById('statusDia');
-const MODEL_URL = '/models';
+const MODEL_URL = 'https://renatogap.github.io/eponto/models';
 
 window.onload = async () => {
     async function iniciarCamera() {
@@ -148,7 +148,7 @@ window.onload = async () => {
     }
 
     async function carregarModelos() {
-        const url = 'https://renatogap.github.io/eponto/models';
+        
         await Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
             faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),

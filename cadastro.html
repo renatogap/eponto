@@ -11,7 +11,16 @@
 
 
 <style>
-  video { width: 100%; border-radius: 10px; }
+  #boxFace {
+    height: 250px;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+  video {
+    width: 100%;
+    border-radius: 10px;
+  }
   .btn-ponto { font-size: 1.2rem; height: 70px; }
 </style>
 </head>
@@ -23,18 +32,22 @@
 
   <div class="card mb-3 shadow-sm">
     <div class="card-body text-center">
-      <video id="video" autoplay muted></video>
+
+      <div id="boxFace">
+        <video id="video" autoplay muted></video>
+      </div>
+
       <p id="statusFace" class="fw-bold text-warning mt-2">Aguardando rosto...</p>
     </div>
   </div>
 
-  <div class="d-grid gap-2">
-    <button id="btnCadastro" class="btn btn-primary btn-ponto">Cadastrar Rosto</button>
-    <button id="btnVerificar" class="btn btn-success btn-ponto">Bater Ponto</button>
-  </div>
-
   <div class="mt-3">
     <p id="resultado" class="fw-bold"></p>
+  </div>
+
+  <div class="d-grid gap-2">
+    <button id="btnCadastro" class="btn btn-primary">Cadastrar Rosto</button>
+    <button id="btnVerificar" class="btn btn-success">Verificar rosto</button>
   </div>
 
 </div>
@@ -42,7 +55,7 @@
 <!-- Navbar inferior -->
 <nav class="navbar fixed-bottom navbar-light bg-white border-top">
     <div class="container d-flex justify-content-around">
-        <a href="ponto-face.html" class="text-primary text-center">
+        <a href="index.html" class="text-primary text-center">
             <i class="bi bi-clock fs-4"></i><br>Ponto
         </a>
         <a href="ajuste.html" class="text-dark text-center">
@@ -69,6 +82,7 @@ async function startCamera() {
 }
 
 async function carregarModelos() {
+  //const MODEL_URL = '/models';
   const MODEL_URL = 'https://renatogap.github.io/eponto/models';
   
   await Promise.all([

@@ -14,13 +14,27 @@
       height: 90px;
       font-size: 1.3rem;
     }
+    #boxFace {
+      height: 250px;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 10px;
+    }
     video {
       width: 100%;
       border-radius: 10px;
+      
+    }
+    #faceStatus {
+      position: sticky;
+      margin-top: -1em;
     }
     .hora-atual {
       font-size: 2.2rem;
       font-weight: bold;
+    }
+    #btnEntrada, #btnSaida {
+      display: none;
     }
   </style>
 </head>
@@ -39,49 +53,33 @@
     </div>
 
     <div class="container mt-3">
-        <h5>Olá, João 👋</h5>
-
-        <!-- Data e hora -->
-        <div class="card mb-3 text-center shadow-sm">
-            <div class="card-body">
-            <div id="dataAtual" class="text-muted"></div>
-            <div id="horaAtual" class="hora-atual"></div>
-            </div>
-        </div>
+        <h5>Olá, Renato 👋</h5>
 
         <!-- Camera -->
-        <div class="card shadow-sm mb-3">
-            <div class="card-body text-center">
-            <h6>Reconhecimento Facial</h6>
-            <video id="video" autoplay muted></video>
-            <p id="faceStatus" class="mt-2 text-warning fw-bold">
-                Aguardando rosto...
-            </p>
-            </div>
-        </div>
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+              <div id="dataAtual" class="text-muted"></div>
+              <div id="horaAtual" class="hora-atual"></div>
+            
+              <div id="boxFace">
+                <video id="video" autoplay muted></video>
+              </div>
 
-        <!-- Botões -->
-        <div class="card shadow-sm">
-            <div class="card-body text-center">
+              <p id="faceStatus" class="mt-2 text-warning fw-bold">
+                  Aguardando rosto...
+              </p>
 
-            <p id="statusDia" class="fw-bold text-muted">
-                Nenhuma marcação registrada
-            </p>
+              <div id="statusDia"></div>
 
-            <button id="btnEntrada"
-                    class="btn btn-success btn-ponto w-100 mb-2"
-                    disabled>
+              <button id="btnEntrada" class="btn btn-success w-100 mb-2" disabled>
                 <i class="bi bi-box-arrow-in-right"></i>
                 Bater Entrada
-            </button>
-
-            <button id="btnSaida"
-                    class="btn btn-danger btn-ponto w-100"
-                    disabled>
+              </button>
+              
+              <button id="btnSaida" class="btn btn-danger w-100" disabled>
                 <i class="bi bi-box-arrow-left"></i>
                 Bater Saída
-            </button>
-
+              </button>
             </div>
         </div>
     </div>
@@ -89,7 +87,7 @@
     <!-- Navbar inferior -->
     <nav class="navbar fixed-bottom navbar-light bg-white border-top">
         <div class="container d-flex justify-content-around">
-            <a href="ponto-face.html" class="text-primary text-center">
+            <a href="index.html" class="text-primary text-center">
                 <i class="bi bi-clock fs-4"></i><br>Ponto
             </a>
             <a href="ajuste.html" class="text-dark text-center">
@@ -116,15 +114,13 @@
 =========================== */
 function atualizarHora() {
   const agora = new Date();
-  document.getElementById('horaAtual').innerText =
-    agora.toLocaleTimeString('pt-BR');
-  document.getElementById('dataAtual').innerText =
-    agora.toLocaleDateString('pt-BR', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  document.getElementById('horaAtual').innerText = agora.toLocaleTimeString('pt-BR');
+  document.getElementById('dataAtual').innerText = agora.toLocaleDateString('pt-BR', {
+                                                      weekday: 'long',
+                                                      day: '2-digit',
+                                                      month: '2-digit',
+                                                      year: 'numeric'
+                                                    });
 }
 setInterval(atualizarHora, 1000);
 atualizarHora();
@@ -134,12 +130,21 @@ atualizarHora();
 =========================== */
 const video = document.getElementById('video');
 const faceStatus = document.getElementById('faceStatus');
+const boxFace = document.getElementById('boxFace');
 const btnEntrada = document.getElementById('btnEntrada');
 const btnSaida = document.getElementById('btnSaida');
 const statusDia = document.getElementById('statusDia');
+// const MODEL_URL = '/models';
 const MODEL_URL = 'https://renatogap.github.io/eponto/models';
 
+let historico = JSON.parse(localStorage.getItem('historicoPonto')) || [];
+
 window.onload = async () => {
+    if (historico.length >= 2) {
+      window.location = 'historico.html';
+      return;
+    }
+
     async function iniciarCamera() {
         const stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'user' }
@@ -158,6 +163,14 @@ window.onload = async () => {
 
     await carregarModelos();
     await iniciarCamera();
+
+    //Mostrar e esconder botões
+    if(historico.length > 0) {
+      
+        btnSaida.style.display = 'block'
+        btnEntrada.style.display = 'none'
+      
+    }
 };
 
 
@@ -177,7 +190,7 @@ video.addEventListener('play', () => {
     } else {
       faceStatus.innerText = 'Aguardando rosto...';
       faceStatus.className = 'mt-2 text-warning fw-bold';
-      btnEntrada.disabled = true;
+      btnEntrada.disabled = false;
       btnSaida.disabled = false;
     }
   }, 1000);
@@ -297,12 +310,19 @@ video.addEventListener('play', () => {
   // Função auxiliar para salvar no histórico
     function salvarHistorico(tipo, nome) {
         const agora = new Date();
+
         const registro = {
             tipo: tipo,
             hora: agora.toLocaleTimeString('pt-BR'),
             data: agora.toLocaleDateString('pt-BR'),
             nome: nome
         };
+
+        sessionStorage.setItem("tipoPonto", tipo);
+        sessionStorage.setItem("horaPonto", registro.hora);
+        sessionStorage.setItem("dataPonto", registro.data);
+        sessionStorage.setItem("nomeFuncionario", nome);
+
 
         let historico = JSON.parse(localStorage.getItem('historicoPonto')) || [];
         historico.push(registro);

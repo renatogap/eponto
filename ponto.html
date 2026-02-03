@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Bater Ponto</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    .btn-ponto {
+      height: 90px;
+      font-size: 1.3rem;
+    }
+    .hora-atual {
+      font-size: 2.5rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body class="bg-light pb-5">
+
+<div class="container mt-3">
+
+  <!-- Cabeçalho -->
+  <div class="mb-3">
+    <h5>Olá, João 👋</h5>
+    <small class="text-muted">Matrícula: 123456</small>
+  </div>
+
+  <!-- Data e Hora -->
+  <div class="card shadow-sm mb-3 text-center">
+    <div class="card-body">
+      <div id="dataAtual" class="text-muted"></div>
+      <div id="horaAtual" class="hora-atual"></div>
+    </div>
+  </div>
+
+  <!-- Status do dia -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-body text-center">
+      <h6>Status de Hoje</h6>
+      <p id="statusDia" class="fw-bold text-warning">
+        Nenhuma marcação registrada
+      </p>
+
+      <div class="row g-2">
+        <div class="col-12">
+          <button id="btnEntrada"
+                  class="btn btn-success btn-ponto w-100">
+            <i class="bi bi-box-arrow-in-right"></i>
+            Bater Entrada
+          </button>
+        </div>
+
+        <div class="col-12">
+          <button id="btnSaida"
+                  class="btn btn-danger btn-ponto w-100"
+                  disabled>
+            <i class="bi bi-box-arrow-left"></i>
+            Bater Saída
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navbar inferior -->
+<nav class="navbar fixed-bottom navbar-light bg-white border-top">
+  <div class="container d-flex justify-content-around">
+    <a href="ponto.html" class="text-primary text-center">
+      <i class="bi bi-clock fs-4"></i><br>Ponto
+    </a>
+    <a href="ajuste.html" class="text-dark text-center">
+      <i class="bi bi-pencil-square fs-4"></i><br>Ajuste
+    </a>
+    <a href="solicitacoes.html" class="text-dark text-center">
+      <i class="bi bi-list-check fs-4"></i><br>Pedidos
+    </a>
+  </div>
+</nav>
+
+
+<!-- JS -->
+<script>
+  function atualizarHora() {
+    const agora = new Date();
+
+    document.getElementById('horaAtual').innerText =
+      agora.toLocaleTimeString('pt-BR');
+
+    document.getElementById('dataAtual').innerText =
+      agora.toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+  }
+
+  setInterval(atualizarHora, 1000);
+  atualizarHora();
+
+  // Simulação de fluxo (substituir por API depois)
+  const btnEntrada = document.getElementById('btnEntrada');
+  const btnSaida = document.getElementById('btnSaida');
+  const statusDia = document.getElementById('statusDia');
+
+  // Captura o descritor do rosto
+  async function capturarDescritor() {
+    const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+    
+    if(detection) 
+      return Array.from(detection.descriptor);
+    else 
+      return null;
+  }
+
+  function getDescritorFacialCadastro() {
+    const descritorCadastro = JSON.parse(localStorage.getItem('faceDescriptor'));
+
+    if(!descritorCadastro)
+      return null;
+
+    return descritorCadastro;
+  }
+
+  btnEntrada.addEventListener('click', async () => {
+    
+    const descritorNovo = await capturarDescritor();
+    if(!descritorNovo) {
+      statusDia.innerText = 'Rosto não detectado. Tente novamente!';
+      statusDia.className = 'text-danger fw-bold';
+      return;
+    }
+
+    const descritorSalvo = getDescritorFacialCadastro();
+    if(!descritorSalvo) {
+      statusDia.innerText = 'Nenhum rosto cadastrado!';
+      statusDia.className = 'text-warning fw-bold';
+      return;
+    }
+
+    // Calcula distância euclidiana
+    const distancia = faceapi.euclideanDistance(descritorNovo, descritorSalvo);
+
+    if(distancia < 0.6) {
+      statusDia.innerText = `'Entrada registrada às <strong>${new Date().toLocaleTimeString('pt-BR')}</strong>'! Distância: ${distancia.toFixed(3)}`;
+      statusDia.className = 'text-success fw-bold';
+    } else {
+      statusDia.innerText = `Rosto NÃO confere. Distância: ${distancia.toFixed(3)}`;
+      statusDia.className = 'text-danger fw-bold';
+    }
+
+    btnEntrada.disabled = true;
+    btnSaida.disabled = false;
+
+    // Exemplo de integração futura:
+    // fetch('/ponto/entrada', { method: 'POST' });
+  });
+
+  btnSaida.addEventListener('click', async() => {
+    
+    const descritorNovo = await capturarDescritor();
+    if(!descritorNovo) {
+      statusDia.innerText = 'Rosto não detectado. Tente novamente!';
+      statusDia.className = 'text-danger fw-bold';
+      return;
+    }
+
+    const descritorSalvo = getDescritorFacialCadastro();
+    if(!descritorSalvo) {
+      statusDia.innerText = 'Nenhum rosto cadastrado!';
+      statusDia.className = 'text-warning fw-bold';
+      return;
+    }
+
+    // Calcula distância euclidiana
+    const distancia = faceapi.euclideanDistance(descritorNovo, descritorSalvo);
+
+    if(distancia < 0.6) {
+      statusDia.innerText = `'Saída registrada às <strong>${new Date().toLocaleTimeString('pt-BR')}</strong>'! Distância: ${distancia.toFixed(3)}`;
+      statusDia.className = 'text-success fw-bold';
+    } else {
+      statusDia.innerText = `Rosto NÃO confere. Distância: ${distancia.toFixed(3)}`;
+      statusDia.className = 'text-danger fw-bold';
+    }
+
+
+    btnSaida.disabled = true;
+
+    // fetch('/ponto/saida', { method: 'POST' });
+  });
+</script>
+
+</body>
+</html>

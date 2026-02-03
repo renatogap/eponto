@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ponto Registrado</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+  body { background: #f8f9fa; }
+  .card-sucesso { text-align: center; padding: 2rem; border-radius: 15px; margin-top: 2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.1);}
+  .icone-sucesso { font-size: 4rem; color: #198754; }
+  .detalhes { font-size: 1.2rem; margin-top: 1rem; }
+  .entrada { color: #198754; font-weight: bold; }
+  .saida { color: #dc3545; font-weight: bold; }
+  table { margin-top: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Histórico do dia -->
+    <h3 class="mt-4">Histórico de Batidas do Dia</h3>
+
+    <div id="historicoDeBatidasDoDia"></div>
+    
+</div>
+
+</div>
+
+    <!-- Navbar inferior -->
+    <nav class="navbar fixed-bottom navbar-light bg-white border-top">
+        <div class="container d-flex justify-content-around">
+            <a href="ponto-face.html" class="text-primary text-center">
+                <i class="bi bi-clock fs-4"></i><br>Ponto
+            </a>
+            <a href="ajuste.html" class="text-dark text-center">
+                <i class="bi bi-pencil-square fs-4"></i><br>Ajuste
+            </a>
+            <a href="espelho.html" class="text-dark text-center">
+                <i class="bi bi-list-check fs-4"></i><br>Espelho
+            </a>
+            <a href="cadastro.html" class="text-dark text-center">
+                <i class="bi bi-people fs-4"></i><br>Cadastro
+            </a>
+        </div>
+    </nav>
+
+<script>
+  // ==============================
+  // Pega dados da última batida
+  // ==============================
+  const nome = sessionStorage.getItem('nomeFuncionario') || 'Funcionário';
+  const tipo = sessionStorage.getItem('tipoPonto') || '';
+  const hora = sessionStorage.getItem('horaPonto') || '';
+  const data = sessionStorage.getItem('dataPonto') || '';
+
+
+  // ==============================
+  // Carrega histórico do dia
+  // ==============================
+  const historico = JSON.parse(localStorage.getItem('historicoPonto')) || [];
+
+  const historicoDeBatidasDoDia = document.querySelector('#historicoDeBatidasDoDia');
+
+  const hoje = new Date().toLocaleDateString('pt-BR');
+
+  // Filtra registros do dia
+  const historicoHoje = historico.filter(r => r.data === hoje);
+
+  if(historicoHoje.length === 0){
+    historicoDeBatidasDoDia.innerHTML = `<div class="card mb-2 shadow-sm"><div class="card-body"><small>Nenhuma batida registrada hoje</small></div></div>`;
+  }
+  else {
+    let cardHistorico = '';
+
+    historicoHoje.forEach(r => {
+        cardHistorico += `<div class="card mb-2 shadow-sm">
+                                <div class="card-body">
+                                <small><strong>Horário:</strong> ${r.hora.substr(0,5)}</small><br>
+                                <span class="badge bg-${r.tipo=='Entrada' ? 'success' : 'danger'}">${r.tipo}</span>
+                                </div>
+                            </div>`;
+    });
+
+    historicoDeBatidasDoDia.innerHTML = cardHistorico;
+  }
+
+</script>
+
+</body>
+</html>

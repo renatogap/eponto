@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Espelho do Ponto</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+  body { background: #f8f9fa; }
+  h3 { margin-top: 1rem; margin-bottom: 1rem; text-align: center; }
+  .table-container { overflow-x: auto; margin-top: 1rem; }
+  .entrada { color: #0f5132; font-weight: 500; }
+  .saida { color: #842029; font-weight: 500; }
+  .table th { background-color: #0d6efd; color: #fff; }
+  .table td { vertical-align: middle; }
+  .filter-container { margin-bottom: 1rem; display: flex; justify-content: center; align-items: center; gap: 1rem; flex-wrap: wrap; }
+  .icon-clock { margin-right: 5px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h3>Espelho do Ponto Mensal</h3>
+
+  <!-- Filtro de mês -->
+  <div class="filter-container">
+    <label for="mesFiltro" class="form-label mb-0">Mês:</label>
+    <input type="month" id="mesFiltro" class="form-control" style="width: 200px;">
+  </div>
+
+  <div class="table-container">
+    <table class="table table-striped table-hover" id="tabelaEspelho">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th class="text-center">Entrada</th>
+          <th class="text-center">Saída</th>
+          <th class="text-center">Situação</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Linhas serão preenchidas via JS -->
+      </tbody>
+    </table>
+  </div>
+
+  <a href="index.html" class="btn btn-primary mt-3 d-block mx-auto">Voltar</a>
+</div>
+
+<!-- Navbar inferior -->
+<nav class="navbar fixed-bottom navbar-light bg-white border-top">
+    <div class="container d-flex justify-content-around">
+        <a href="ponto-face.html" class="text-primary text-center">
+            <i class="bi bi-clock fs-4"></i><br>Ponto
+        </a>
+        <a href="ajuste.html" class="text-dark text-center">
+            <i class="bi bi-pencil-square fs-4"></i><br>Ajuste
+        </a>
+        <a href="espelho.html" class="text-dark text-center">
+            <i class="bi bi-list-check fs-4"></i><br>Espelho
+        </a>
+        <a href="cadastro.html" class="text-dark text-center">
+            <i class="bi bi-people fs-4"></i><br>Cadastro
+        </a>
+    </div>
+</nav>
+
+<script>
+
+    localStorage.setItem('historicoPonto', JSON.stringify([        
+        { "nome": "João Silva", "data": "04/02/2026", "tipo": "Entrada", "hora": "08:15" },
+
+        { "nome": "João Silva", "data": "04/02/2026", "tipo": "Saida", "hora": "17:10" },   // Apenas Saida
+        // 05/02/2026 = falta (nenhum registro)
+        { "nome": "João Silva", "data": "06/02/2026", "tipo": "Saida", "hora": "17:05" },
+
+        { "nome": "João Silva", "data": "06/02/2026", "tipo": "Entrada", "hora": "08:00" },
+        { "nome": "João Silva", "data": "06/02/2026", "tipo": "Saida", "hora": "17:00" },
+
+        // { "nome": "João Silva", "data": "07/02/2026", "tipo": "Entrada", "hora": "08:05" },
+        { "nome": "João Silva", "data": "07/02/2026", "tipo": "Saida", "hora": "17:10" },
+
+        { "nome": "João Silva", "data": "10/02/2026", "tipo": "Entrada", "hora": "08:00" },
+        { "nome": "João Silva", "data": "10/02/2026", "tipo": "Saida", "hora": "16:55" },
+
+        { "nome": "João Silva", "data": "11/02/2026", "tipo": "Entrada", "hora": "08:20" }  // Apenas entrada
+    ]));
+
+
+    // Função para obter o dia da semana
+    function obterDiaSemana(dataStr) {
+        const [dia, mes, ano] = dataStr.split('/');
+        const data = new Date(`${ano}-${mes}-${dia}`);
+        return data.toLocaleDateString('pt-BR', { weekday: 'short' });
+    }
+
+    function isFimDeSemana(diaSemana) {
+        return (diaSemana=='sáb.' || diaSemana=='dom.' ? '-' : '')
+    }
+
+    // Função para gerar todos os dias do mês
+    function gerarDiasMes(ano, mes) {
+        const totalDias = new Date(ano, mes, 0).getDate(); // mês começa em 1
+        const dias = [];
+        for (let d = 1; d <= totalDias; d++) {
+            dias.push(`${String(d).padStart(2,'0')}/${String(mes).padStart(2,'0')}/${ano}`);
+        }
+        return dias;
+    }
+
+    
+    function agruparBatidasPorDia(historico, anoSel, mesSel) {
+        const registrosPorDia = {};
+
+        historico.forEach(r => {
+            const [dia, mes, ano] = r.data.split('/');
+            if (mes === mesSel && ano === anoSel) {
+            if (!registrosPorDia[r.data]) registrosPorDia[r.data] = {};
+                registrosPorDia[r.data][r.tipo.toLowerCase()] = r; // entrada ou saída
+            }
+        });
+
+        return registrosPorDia;
+    }
+
+    function converterDataParaDate(dataStr) {
+        // dataStr = "08/02/2026"
+        const [dia, mes, ano] = dataStr.split('/');
+        // Mês no JS começa em 0, por isso subtraímos 1
+        return new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia));
+    }
+
+    function carregarEspelho() {
+        const tbody = document.querySelector('#tabelaEspelho tbody');
+        tbody.innerHTML = '';
+
+        const historico = JSON.parse(localStorage.getItem('historicoPonto')) || [];
+        const mesSelecionado = document.getElementById('mesFiltro').value;
+
+        if (!mesSelecionado) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Selecione um mês para visualizar o espelho do ponto.</td></tr>';
+            return;
+        }
+
+        const [anoSel, mesSel] = mesSelecionado.split('-');
+        const diasMes = gerarDiasMes(parseInt(anoSel), parseInt(mesSel));
+
+        // Agrupa registros por dia
+        const registrosPorDia = agruparBatidasPorDia(historico, anoSel, mesSel);
+
+        // Cria linhas para todos os dias
+        diasMes.forEach(data => {
+            const dia = registrosPorDia[data] || {}; // vazio se não houver batida
+            const tr = document.createElement('tr');
+
+            const diaSemana = obterDiaSemana(data);
+
+            const hoje = new Date(); // data e hora atual
+            const dataEspelho = converterDataParaDate(data);
+
+            tr.innerHTML = `
+            <td><strong>${data.substr(0,5)}</strong><br><small>${diaSemana}</small></td>
+            <td class="text-center entrada">${dia.entrada ? '<i class="bi bi-clock icon-clock"></i> '+dia.entrada.hora.substr(0,5) : `${isFimDeSemana(diaSemana)}`}</td>
+            <td class="text-center saida">${dia.saida ? '<i class="bi bi-clock icon-clock"></i> '+dia.saida.hora.substr(0,5) : `${isFimDeSemana(diaSemana)}`}</td>
+            <td class="text-center">${(!dia.entrada && !dia.saida && !isFimDeSemana(diaSemana) && hoje > dataEspelho) ? '<span class="badge rounded-pill bg-danger">FALTA</span>' : ((dia.entrada && !dia.saida) || (!dia.entrada && dia.saida)) ? '<span class="badge rounded-pill bg-warning"><i class="bi bi-exclamation-triangle-fill"></i></span>' : ''}</td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Inicializa mês atual
+    const mesAtual = new Date();
+    document.getElementById('mesFiltro').value = `${mesAtual.getFullYear()}-${String(mesAtual.getMonth() + 1).padStart(2,'0')}`;
+
+    carregarEspelho();
+
+    document.getElementById('mesFiltro').addEventListener('change', carregarEspelho);
+</script>
+
+</body>
+</html>

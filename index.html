@@ -44,7 +44,7 @@
     <div class="modal fade" id="loadingModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content text-center p-3">
-                <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem;">
+                <div class="spinner-border text-primary" role="status" style="width: 4rem; height: 4rem; margin: 0 auto;">
                     <span class="visually-hidden">Carregando...</span>
                 </div>
                 <div class="mt-3 fw-bold">Registrando ponto...</div>
@@ -134,7 +134,7 @@ const boxFace = document.getElementById('boxFace');
 const btnEntrada = document.getElementById('btnEntrada');
 const btnSaida = document.getElementById('btnSaida');
 const statusDia = document.getElementById('statusDia');
-// const MODEL_URL = '/models';
+//const MODEL_URL = '/models';
 const MODEL_URL = 'https://renatogap.github.io/eponto/models';
 
 let historico = JSON.parse(localStorage.getItem('historicoPonto')) || [];
@@ -165,8 +165,11 @@ window.onload = async () => {
     await iniciarCamera();
 
     //Mostrar e esconder botões
-    if(historico.length > 0) {
-      
+    if (historico.length == 0) {
+      btnSaida.style.display = 'none'
+      btnEntrada.style.display = 'block'
+    }
+    else if(historico.length > 0 && historico.length < 2) {
         btnSaida.style.display = 'block'
         btnEntrada.style.display = 'none'
       
